@@ -1,4 +1,4 @@
-from typing import List, NewType
+from typing import List, NewType, Optional
 import os
 
 DATA_SOURCE_PATH: str = os.path.abspath(os.path.join(__file__, os.pardir,os.pardir, "resources", "day2.txt"))
@@ -46,9 +46,25 @@ def solve_part_1() -> int:
     program[2] = 2
     return run_program(program)
 
+def solve_part_2() -> Optional[int]:
+    with open(DATA_SOURCE_PATH) as program_data:
+        program_source = program_data.read().replace('\n', '')
+        program = [int(opcode.strip()) for opcode in program_source.split(",")]
+
+
+    for noun in range(0, 99):
+        for verb in range(0, 99):
+            temporary_program = program[:]
+            temporary_program[1] = noun
+            temporary_program[2] = verb
+
+            if run_program(temporary_program) == 19690720:
+                return 100 * noun + verb
 
 if __name__ == "__main__":
     print(solve_part_1())
+    print(solve_part_2())
+
 
 
 
