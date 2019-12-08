@@ -31,6 +31,16 @@ def get_collisions(path1: List[Node], path2: List[Node]) -> Set[Point]:
 def compute_distance_from_center(point: Point) -> int:
     return abs(point[0]) + abs(point[1])
 
+def distance_until_collision(collision: Point, path: List[Point]) -> int:
+    waypoints = iter(path)
+    current = next(waypoints)
+    distance = 0
+
+    while collision != current:
+        distance += 1
+        current = next(waypoints)
+    return distance
+
 def solve_part_1() -> int:
     path1: List[Node] = []
     path2: List[Node] = []
@@ -64,9 +74,12 @@ def solve_part_2() -> int:
                 path2.extend(parse_line(content))
 
     colliding_points = get_collisions(path1, path2)
-    distances = (compute_distance_from_center(intersection) for intersection in colliding_points)
-    return min(distance for distance in distances if distance > 0)
+    path_1_distances = (distance_until_collision(collision, get_all_waypoints(path1)) for collision in colliding_points)
+    path_2_distances = (distance_until_collision(collision, get_all_waypoints(path2)) for collision in colliding_points)
+    summed_distances = (item[0] + item[1] for item in zip(path_1_distances, path_2_distances) if item[0] > 0 or item[1] > 0)
+
+    return min(summed_distances)
 
 if __name__ == "__main__":
     print(solve_part_1())
-
+    print(solve_part_2())
