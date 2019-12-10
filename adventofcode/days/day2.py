@@ -1,4 +1,4 @@
-from typing import List, NewType, Optional
+from typing import List, NewType, Optional, Tuple
 import os
 
 DATA_SOURCE_PATH: str = os.path.abspath(os.path.join(__file__, os.pardir,os.pardir, "resources", "day2.txt"))
@@ -8,32 +8,54 @@ Program = List[int]
 class TerminationException(Exception):
     pass
 
-def opcode_1(at: int, program: Program) -> None:
-    arg_1, arg_2, to = program[at+1:at+4]
-    program[to] = program[arg_1] + program[arg_2]
+def get_value(pointer: int, mode: int, program: Program) -> int:
+    return program[pointer] if mode == 0 else pointer
 
-def opcode_2(at: int, program: Program) -> None:
-    arg_1, arg_2, to = program[at+1:at+4]
-    program[to] = program[arg_1] * program[arg_2]
+def opcode_1(at: int, program: Program, modes: List[int]) -> int:
+    arg_1, arg_2, to = zip(program[at+1:at+4], modes)
+    program[to[0]] = get_value(*arg_1, program) + get_value(*arg_2, program)
+    return 4
 
-def opcode_99(at: int, program: Program) -> None:
+def opcode_2(at: int, program: Program, modes: List[int]) -> int:
+    arg_1, arg_2, to = zip(program[at+1:at+4], modes)
+    program[to[0]] = get_value(*arg_1, program) * get_value(*arg_2, program)
+    return 4
+
+def opcode_3(at: int, program: Program, args: List[int]) -> int:
+    target = program[at + 1]
+    program[target] = args[0]
+    return 2
+
+def opcode_4(at: int, program: Program, *_) -> int:
+    source = program[at + 1]
+    print("output: {}".format(program[source]))
+    return 2
+
+def opcode_99(at: int, program: Program, modes: List[int]) -> int:
     raise TerminationException
-
-def next_opcode(at: int) -> int:
-    return at + 4
 
 OPCODE_REGISTRY = {
     1: opcode_1,
     2: opcode_2,
+    3: opcode_3,
+    4: opcode_4,
     99: opcode_99
 }
 
+def parse_opcode(opcode: int) -> Tuple[int, List[int]]:
+    as_string = str(opcode)
+    operation, modes = int(as_string[-2:]), [int(digit) for digit in as_string[:-2]]
+    modes = (3 - len(modes)) * [0] + modes
+    return operation, modes[::-1]
+
 def run_program(program: Program) -> None:
     at = 0
+    program_input = 1
     try:
         while True:
-            OPCODE_REGISTRY[program[at]](at, program)
-            at = next_opcode(at)
+            opcode, modes = parse_opcode(program[at])
+            modes = modes if opcode != 3 else [program_input]
+            at += OPCODE_REGISTRY[opcode](at, program, modes)
     except TerminationException as e:
         return program[0]
 
