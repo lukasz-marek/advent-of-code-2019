@@ -11,9 +11,16 @@ def solve_part_1() -> int:
         program_source = program_data.read().replace('\n', '')
         program = [int(opcode.strip()) for opcode in program_source.split(",")]
 
-    # program[1] = 12
-    # program[2] = 2
-    return run_program(program)
+    return run_program(program, program_input = 1)
+
+def solve_part_2() -> int:
+    with open(DATA_SOURCE_PATH) as program_data:
+        program_source = program_data.read().replace('\n', '')
+        program = [int(opcode.strip()) for opcode in program_source.split(",")]
+
+    return run_program(program, program_input = 5)
 
 if __name__ == "__main__":
     print(solve_part_1())
+    print(solve_part_2())
+
