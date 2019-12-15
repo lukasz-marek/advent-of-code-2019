@@ -11,14 +11,14 @@ def solve_part_1() -> int:
         program_source = program_data.read().replace('\n', '')
         program = [int(opcode.strip()) for opcode in program_source.split(",")]
 
-    return run_program(program, program_input = 1)
+    return run_program(program, program_inputs = [1])
 
 def solve_part_2() -> int:
     with open(DATA_SOURCE_PATH) as program_data:
         program_source = program_data.read().replace('\n', '')
         program = [int(opcode.strip()) for opcode in program_source.split(",")]
 
-    return run_program(program, program_input = 5)
+    return run_program(program, program_inputs = [5])
 
 if __name__ == "__main__":
     print(solve_part_1())

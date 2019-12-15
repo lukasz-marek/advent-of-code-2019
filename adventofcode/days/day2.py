@@ -11,49 +11,49 @@ class TerminationException(Exception):
 def get_value(pointer: int, mode: int, program: Program) -> int:
     return program[pointer] if mode == 0 else pointer
 
-def opcode_1(at: int, program: Program, modes: List[int]) -> int:
+def opcode_1(at: int, program: Program, modes: List[int], **kwargs) -> int:
     arg_1, arg_2, to = zip(program[at+1:at+4], modes)
     program[to[0]] = get_value(*arg_1, program) + get_value(*arg_2, program)
     return at + 4
 
-def opcode_2(at: int, program: Program, modes: List[int]) -> int:
+def opcode_2(at: int, program: Program, modes: List[int], **kwargs) -> int:
     arg_1, arg_2, to = zip(program[at+1:at+4], modes)
     program[to[0]] = get_value(*arg_1, program) * get_value(*arg_2, program)
     return at + 4
 
-def opcode_3(at: int, program: Program, args: List[int]) -> int:
+def opcode_3(at: int, program: Program, args: List[int], **kwargs) -> int:
     target = program[at + 1]
     program[target] = args[0]
     return at + 2
 
-def opcode_4(at: int, program: Program, *_) -> int:
+def opcode_4(at: int, program: Program, *_, output: List[int]) -> int:
     source = program[at + 1]
-    print("output: {}".format(program[source]))
+    output.append(program[source])
     return at + 2
 
-def opcode_5(at: int, program: Program, modes: List[int]) -> int:
+def opcode_5(at: int, program: Program, modes: List[int], **kwargs) -> int:
     check_value, go_to = zip(program[at+1:at+3], modes)
     is_true = get_value(*check_value, program) != 0
     return get_value(*go_to, program) if is_true else at + 3
 
-def opcode_6(at: int, program: Program, modes: List[int]) -> int:
+def opcode_6(at: int, program: Program, modes: List[int], **kwargs) -> int:
     check_value, go_to = zip(program[at+1:at+3], modes)
     is_false = get_value(*check_value, program) == 0
     return get_value(*go_to, program) if is_false else at + 3
 
-def opcode_7(at: int, program: Program, modes: List[int]) -> int:
+def opcode_7(at: int, program: Program, modes: List[int], **kwargs) -> int:
     arg_1, arg_2, to = zip(program[at+1:at+4], modes)
     arg_1, arg_2  = get_value(*arg_1, program), get_value(*arg_2, program)
     program[to[0]] = 1 if arg_1 < arg_2 else 0
     return at + 4
 
-def opcode_8(at: int, program: Program, modes: List[int]) -> int:
+def opcode_8(at: int, program: Program, modes: List[int], **kwargs) -> int:
     arg_1, arg_2, to = zip(program[at+1:at+4], modes)
     arg_1, arg_2  = get_value(*arg_1, program), get_value(*arg_2, program)
     program[to[0]] = 1 if arg_1 == arg_2 else 0
     return at + 4
 
-def opcode_99(at: int, program: Program, modes: List[int]) -> int:
+def opcode_99(at: int, program: Program, modes: List[int], **kwargs) -> int:
     raise TerminationException
 
 OPCODE_REGISTRY = {
@@ -74,15 +74,17 @@ def parse_opcode(opcode: int) -> Tuple[int, List[int]]:
     modes = (3 - len(modes)) * [0] + modes
     return operation, modes[::-1]
 
-def run_program(program: Program, *_,program_input = 0) -> None:
+def run_program(program: Program, *_,program_inputs = []) -> Tuple[int, List[int]]:
     at = 0
+    output = []
+    inputs = iter(program_inputs)
     try:
         while True:
             opcode, modes = parse_opcode(program[at])
-            modes = modes if opcode != 3 else [program_input]
-            at = OPCODE_REGISTRY[opcode](at, program, modes)
+            modes = modes if opcode != 3 else [next(inputs)]
+            at = OPCODE_REGISTRY[opcode](at, program, modes, output=output)
     except TerminationException as e:
-        return program[0]
+        return program[0], output
 
 def solve_part_1() -> int:
     with open(DATA_SOURCE_PATH) as program_data:
@@ -91,13 +93,12 @@ def solve_part_1() -> int:
 
     program[1] = 12
     program[2] = 2
-    return run_program(program)
+    return run_program(program)[0]
 
 def solve_part_2() -> Optional[int]:
     with open(DATA_SOURCE_PATH) as program_data:
         program_source = program_data.read().replace('\n', '')
         program = [int(opcode.strip()) for opcode in program_source.split(",")]
-
 
     for noun in range(0, 99):
         for verb in range(0, 99):
@@ -105,7 +106,7 @@ def solve_part_2() -> Optional[int]:
             temporary_program[1] = noun
             temporary_program[2] = verb
 
-            if run_program(temporary_program) == 19690720:
+            if run_program(temporary_program)[0] == 19690720:
                 return 100 * noun + verb
 
 if __name__ == "__main__":
